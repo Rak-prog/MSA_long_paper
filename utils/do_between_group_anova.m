@@ -1,4 +1,4 @@
-function [recap_table, effect_size, R2_full_model, CI_low, CI_high, partial_eta] = do_between_group_anova(data, areas, alpha, doPlots, two_levels)
+function [recap_table, relative_change_msa_all, relative_change_msa_p, relative_change_msa_c, CI_high, partial_eta] = do_between_group_anova(data, areas, alpha, doPlots, two_levels)
     
     if nargin < 4 || isempty(doPlots)
         doPlots = false;
@@ -18,6 +18,8 @@ function [recap_table, effect_size, R2_full_model, CI_low, CI_high, partial_eta]
     check_partial = nan(nROI,1);
     R2_full_model = nan(nROI,1);
     relative_change_msa_all = nan(nROI,1);
+    relative_change_msa_p = nan(nROI,1);
+    relative_change_msa_c = nan(nROI,1);
     % --- Fit one model once to get coefficient names and sizes (assumes consistent design) ---
     testROI = areas{1};
     lm0 = fitlm(data, [testROI, ' ~ GROUP + age_final + sex_final']);
@@ -31,9 +33,11 @@ function [recap_table, effect_size, R2_full_model, CI_low, CI_high, partial_eta]
         
         mean_MSA = mean(data{data.GROUP=='MSA', areas{roi}}, 'omitnan');
         mean_MSAP =  mean(data{strcmp(data.Phenotype , 'P'), areas{roi}}, 'omitnan');
-        mean_MSAP =  mean(data{strcmp(data.Phenotype , 'C'), areas{roi}}, 'omitnan');
+        mean_MSAC =  mean(data{strcmp(data.Phenotype , 'C'), areas{roi}}, 'omitnan');
         mean_HC  = mean(data{data.GROUP=='HC',  areas{roi}}, 'omitnan');
-        relative_change_msa_all(roi) = (mean_MSA-mean_HC)/mean_HC
+        relative_change_msa_all(roi) = (mean_MSA-mean_HC)/mean_HC*100;
+        relative_change_msa_p(roi) = (mean_MSAP-mean_HC)/mean_HC*100;
+        relative_change_msa_c(roi) = (mean_MSAC-mean_HC)/mean_HC*100;
         lm = fitlm(data, [areas{roi}, ' ~ GROUP + age_final + sex_final']);
         CI = coefCI(lm);
         CI_low(:,roi) = CI(:,1);
